@@ -36,3 +36,4 @@ NEXT_PUBLIC_CONTRACT_ID=CBBRYWY6ROXCM6AHP4COM3AL6UDPTY66FXF43Q7PNEIPU53RZOGHBYP3
 ## Related Repos
 
 - `https://github.com/Goldii-locks/escrow-contract`  — Soroban smart contract
+- Update README with latest progress
