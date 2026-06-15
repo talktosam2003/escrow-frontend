@@ -4,6 +4,9 @@ import { useWallet } from "@/app/context/WalletContext";
 import Navbar from "@/app/components/Navbar";
 import { useRouter } from "next/navigation";
 
+const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || "";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 export default function CreateJob() {
   const { address, signTransaction } = useWallet();
   const router = useRouter();
@@ -27,7 +30,45 @@ export default function CreateJob() {
     if (!address) return alert("Connect your wallet first");
     setLoading(true);
     try {
-      alert("Job creation will be wired to the deployed contract. Coming soon!");
+      const milestoneAmounts = milestones.map(m => BigInt(m.amount));
+      
+      // Build transaction
+      const buildTxRes = await fetch(`${BACKEND_URL}/api/jobs/build-tx`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractId: CONTRACT_ID,
+          method: "initialize",
+          args: [
+            { type: "address", value: address },
+            { type: "address", value: freelancer },
+            { type: "address", value: arbiter },
+            { type: "address", value: token },
+            { type: "vec", value: milestoneAmounts.map(a => ({ type: "i128", value: a.toString() })) }
+          ],
+          sourceAddress: address
+        })
+      });
+
+      if (!buildTxRes.ok) throw new Error("Failed to build transaction");
+      const { xdr } = await buildTxRes.json();
+
+      // Sign with Freighter
+      const signedXdr = await signTransaction(xdr);
+
+      // Submit to backend
+      const submitRes = await fetch(`${BACKEND_URL}/api/jobs/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signedXdr })
+      });
+
+      if (!submitRes.ok) throw new Error("Failed to submit transaction");
+
+      alert("Job created successfully!");
+      router.push("/dashboard");
+    } catch (err: any) {
+      alert(err.message);
     } finally {
       setLoading(false);
     }
