@@ -21,7 +21,7 @@ const mockJob = {
 export default function Dashboard() {
   const { address } = useWallet();
   const [loading, setLoading] = useState(true);
-  const [job, setJob] = useState(mockJob | null);
+  const [job, setJob] = useState<typeof mockJob | null>(mockJob);
 
   useEffect(() => {
     // Simulate API loading delay
