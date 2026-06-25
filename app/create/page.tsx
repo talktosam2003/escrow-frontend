@@ -16,6 +16,8 @@ export default function CreateJob() {
   const [autoReleaseDays, setAutoReleaseDays] = useState("7");
   const [milestones, setMilestones] = useState([{ amount: "" }]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const addMilestone = () => setMilestones([...milestones, { amount: "" }]);
   const removeMilestone = (i: number) =>
@@ -28,8 +30,9 @@ export default function CreateJob() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address) return alert("Connect your wallet first");
+    if (!address) return;
     setLoading(true);
+    setError(null);
     try {
       const milestoneAmounts = milestones.map(m => BigInt(m.amount));
 
@@ -68,15 +71,45 @@ export default function CreateJob() {
       });
 
       if (!submitRes.ok) throw new Error("Failed to submit transaction");
-
-      alert("Job created successfully!");
-      router.push("/dashboard");
+      const { hash } = await submitRes.json();
+      setTxHash(hash);
     } catch (err: any) {
-      alert(err.message);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
+
+  if (txHash) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto flex items-center justify-center">
+          <div className="text-center px-4 py-12">
+            <div className="text-green-400 text-5xl mb-4">✓</div>
+            <h2 className="text-xl font-bold mb-2">Job Created!</h2>
+            <p className="text-gray-400 text-sm mb-6">Your escrow job is live on Stellar testnet.</p>
+            <a
+              href={`https://stellar.expert/explorer/testnet/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 hover:text-indigo-300 underline text-sm transition-colors duration-200"
+            >
+              View transaction on Stellar Expert →
+            </a>
+            <div className="mt-6">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all duration-150"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
@@ -84,6 +117,11 @@ export default function CreateJob() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <h1 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Create New Job</h1>
+        {error && (
+          <div className="mb-5 rounded-lg bg-red-900/40 border border-red-700 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Freelancer Address</label>
