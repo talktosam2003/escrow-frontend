@@ -79,9 +79,10 @@ export default function CreateJob() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       <Navbar />
-      <main className="max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <h1 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Create New Job</h1>
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           <div>
@@ -168,6 +169,7 @@ export default function CreateJob() {
             <p className="text-center text-sm text-gray-500">Connect your wallet to create a job</p>
           )}
         </form>
+        </div>
       </main>
     </div>
   );
